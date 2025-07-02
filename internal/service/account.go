@@ -40,7 +40,14 @@ func (s *AccountService) CreateAccount(ctx context.Context, req *v1.CreateAccoun
 	//return &pb.CreateAccountReply{}, nil
 }
 func (s *AccountService) UpdateAccount(ctx context.Context, req *v1.UpdateAccountRequest) (*v1.UpdateAccountReply, error) {
-	return &v1.UpdateAccountReply{}, nil
+	s.logger.WithContext(ctx).Infof("req: %v", req)
+	num, err := s.accUsecase.SyncAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.UpdateAccountReply{
+		Num: int32(num),
+	}, nil
 }
 func (s *AccountService) DeleteAccount(ctx context.Context, req *v1.DeleteAccountRequest) (*v1.DeleteAccountReply, error) {
 	return &v1.DeleteAccountReply{}, nil

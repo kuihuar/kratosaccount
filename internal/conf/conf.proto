@@ -40,5 +40,12 @@ message Data {
   }
   Database database = 1;
   Redis redis = 2;
-  
+  Dingtalk dingtalk = 3;
+}
+
+message Dingtalk {
+  string endpoint = 1;
+  string app_key = 2;
+  string app_secret = 3;
+  string timeout = 4;
 }

@@ -30,17 +30,24 @@ type AccountRepo interface {
 	FindByID(context.Context, int64) (*Account, error)
 	//ListByPage(context.Context, page, page_size int32) ([]*Account, error)
 	ListAll(context.Context) ([]*Account, error)
+
+	SaveAccounts(context.Context, []*Account) (int, error)
 }
 
 // AccountUsecase is a Account usecase.
 type AccountUsecase struct {
-	repo AccountRepo
-	log  *log.Helper
+	repo           AccountRepo
+	thirdPartyRepo DingTalkRepo
+	log            *log.Helper
 }
 
 // NewAccountUsecase new a Account usecase.
-func NewAccountUsecase(repo AccountRepo, logger log.Logger) *AccountUsecase {
-	return &AccountUsecase{repo: repo, log: log.NewHelper(logger)}
+func NewAccountUsecase(repo AccountRepo, dingTalkRepo DingTalkRepo, logger log.Logger) *AccountUsecase {
+	return &AccountUsecase{
+		repo:           repo,
+		thirdPartyRepo: dingTalkRepo,
+		log:            log.NewHelper(logger),
+	}
 }
 
 // CreateAccount creates a Account, and returns the new Account.
@@ -56,4 +63,33 @@ func (uc *AccountUsecase) GetAccountByID(ctx context.Context, id int64) (*Accoun
 
 	uc.log.WithContext(ctx).Infof("biz.GetAccountByID: %v", id)
 	return uc.repo.FindByID(ctx, id)
+}
+
+func (uc *AccountUsecase) SyncAccount(ctx context.Context) (int, error) {
+	uc.log.WithContext(ctx).Infof("biz.SyncAccount: start")
+	// 1. 获取access_token
+	accessToken, err := uc.thirdPartyRepo.GetAccessToken(ctx, "code")
+	uc.log.WithContext(ctx).Infof("biz.SyncAccount: accessToken: %v, err: %v", accessToken, err)
+	if err != nil {
+		return 0, err
+	}
+	// TODO: add biz logic
+	// 1. 从第三方获取数据
+	extAccounts, err := uc.thirdPartyRepo.FetchAccounts(ctx, accessToken)
+	uc.log.WithContext(ctx).Infof("biz.SyncAccount: extAccounts: %v, err: %v", extAccounts, err)
+	if err != nil {
+		return 0, err
+		//return errors.New("THIRD_PARTY_FAIL第三方API调用失败")
+	}
+	domainAccounts := make([]*Account, 0, len(extAccounts))
+	for _, extAccount := range extAccounts {
+		domainAccounts = append(domainAccounts, &Account{
+			Username: extAccount.Name,
+			Email:    extAccount.Email,
+			Status:   1,
+		})
+	}
+	uc.log.WithContext(ctx).Infof("biz.domainAccounts: %v", domainAccounts)
+	//return uc.repo.FindByID(ctx, id)
+	return uc.repo.SaveAccounts(ctx, domainAccounts)
 }

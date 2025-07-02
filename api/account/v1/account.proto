@@ -71,7 +71,9 @@ message UpdateAccountRequest {
   string phone = 4;
   int32 status = 5;
 }
-message UpdateAccountReply {}
+message UpdateAccountReply {
+	int32 num = 1;
+}
 
 message DeleteAccountRequest {
   int64 id = 1;

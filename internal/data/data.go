@@ -2,9 +2,13 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"nancalacc/internal/conf"
 	"time"
 
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	dingtalkoauth2_1_0 "github.com/alibabacloud-go/dingtalk/oauth2_1_0"
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 	"gorm.io/driver/mysql"
@@ -15,17 +19,37 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewAccountRepo)
+var ProviderSet = wire.NewSet(
+	NewData,
+	NewAccountRepo,
+	NewDingTalkRepo,
+
+	// wire.Bind(new(biz.AccountRepo), new(*accountRepo)),
+	// wire.Bind(new(biz.DingTalkRepo), new(*dingTalkRepo)),
+)
 
 // Data .
 type Data struct {
 	// TODO wrapped database client
 	db *gorm.DB
-	//log *log.Helper
+	// 第三方配置
+	dingtalkCli *dingtalkoauth2_1_0.Client
+	// 钉钉配置
+	thirdParty *ThirdParty
+}
+
+type ThirdParty struct {
+	Endpoint  string
+	AppKey    string
+	AppSecret string
+	Timeout   string
 }
 
 // NewData .
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
+
+	fmt.Printf("=====newData.c: %v", c)
+
 	var db *gorm.DB
 	var err error
 
@@ -54,8 +78,27 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 		log.NewHelper(logger).Errorf("seed data failed: %v", err)
 	}
 
+	config := &openapi.Config{
+		Protocol: tea.String("https"),
+		RegionId: tea.String("central"),
+	}
+
+	client, err := dingtalkoauth2_1_0.NewClient(config)
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	dingtalk := &ThirdParty{
+		Endpoint:  c.Dingtalk.Endpoint,
+		AppKey:    c.Dingtalk.AppKey,
+		AppSecret: c.Dingtalk.AppSecret,
+		Timeout:   c.Dingtalk.Timeout,
+	}
+
 	return &Data{
-		db: db,
+		db:          db,
+		dingtalkCli: client,
+		thirdParty:  dingtalk,
 	}, cleanup, nil
 }
 

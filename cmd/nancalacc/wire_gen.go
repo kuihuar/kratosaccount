@@ -14,6 +14,7 @@ import (
 	"nancalacc/internal/data"
 	"nancalacc/internal/server"
 	"nancalacc/internal/service"
+	"nancalacc/internal/task"
 )
 
 import (
@@ -29,11 +30,13 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	accountRepo := data.NewAccountRepo(dataData, logger)
-	accountUsecase := biz.NewAccountUsecase(accountRepo, logger)
+	dingTalkRepo := data.NewDingTalkRepo(dataData, logger)
+	accountUsecase := biz.NewAccountUsecase(accountRepo, dingTalkRepo, logger)
 	accountService := service.NewAccountService(accountUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, accountService, logger)
 	httpServer := server.NewHTTPServer(confServer, accountService, logger)
-	app := newApp(logger, grpcServer, httpServer)
+	cronService := task.NewCronServiceWithJobs(logger)
+	app := newApp(logger, grpcServer, httpServer, cronService)
 	return app, func() {
 		cleanup()
 	}, nil
