@@ -2,8 +2,10 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"nancalacc/internal/biz"
 	"nancalacc/internal/data/models"
+	"strconv"
 	"time"
 
 	"github.com/go-kratos/kratos/v2/errors"
@@ -17,15 +19,27 @@ type accountRepo struct {
 	log  *log.Helper
 }
 
-// SaveAccounts implements biz.AccountRepo.
-func (r *accountRepo) SaveAccounts(ctx context.Context, accounts []*biz.Account) (int, error) {
-	entities := make([]*models.Account, 0, len(accounts))
+func NewAccountRepo(data *Data, logger log.Logger) *accountRepo {
+	return &accountRepo{
+		data: data,
+		log:  log.NewHelper(logger),
+	}
+}
+
+var (
+	ThirdCompanyID = "10"
+	PlatformID     = "1010"
+)
+
+// SaveUsers implements biz.AccountRepo.
+func (r *accountRepo) SaveUsers(ctx context.Context, accounts []*biz.DingtalkDeptUser) (int, error) {
+	entities := make([]*models.TbLasUser, 0, len(accounts))
 	for _, acc := range accounts {
-		entities = append(entities, &models.Account{
-			Username: acc.Username,
-			Email:    acc.Email,
-			Phone:    acc.Phone,
-			Password: acc.Password,
+		entities = append(entities, &models.TbLasUser{
+			Uid:      acc.Userid,
+			NickName: acc.Name,
+			Email:    sql.NullString{String: acc.Email, Valid: acc.Email != ""},
+			Phone:    sql.NullString{String: acc.Mobile, Valid: acc.Mobile != ""},
 		})
 	}
 
@@ -55,57 +69,56 @@ func (r *accountRepo) SaveAccounts(ctx context.Context, accounts []*biz.Account)
 	return int(result.RowsAffected), nil
 }
 
-func NewAccountRepo(data *Data, logger log.Logger) biz.AccountRepo {
-	return &accountRepo{
-		data: data,
-		log:  log.NewHelper(logger),
+// ID             uint           `gorm:"primaryKey;autoIncrement;column:id;type:int unsigned;comment:主键id" json:"id"`
+//
+//	Did            string         `gorm:"not null;column:did;type:varchar(255);comment:部门id" json:"did"`
+//	TaskID         string         `gorm:"not null;column:task_id;type:varchar(20);comment:任务id" json:"task_id"`
+//	ThirdCompanyID string         `gorm:"not null;column:third_company_id;type:varchar(20);comment:租户id" json:"third_company_id"`
+//	PlatformID     string         `gorm:"not null;column:platform_id;type:varchar(60);comment:平台id" json:"platform_id"`
+//	Pid            sql.NullString `gorm:"column:pid;type:varchar(255);comment:父部门id" json:"pid"`
+//	Name           string         `gorm:"not null;column:name;type:varchar(255);comment:部门名称" json:"name"`
+//	Order          int            `gorm:"column:order;type:int;default:0;comment:排序" json:"order"`
+//	Source         string         `gorm:"column:source;type:varchar(20);default:sync;comment:来源" json:"source"`
+//	Ctime          sql.NullTime   `gorm:"column:ctime;type:timestamp;default:CURRENT_TIMESTAMP;comment:创建时间" json:"ctime"`
+//	Mtime          time.Time      `gorm:"not null;column:mtime;type:timestamp;comment:修改时间" json:"mtime"`
+//	CheckType      int8           `gorm:"not null;column:check_type;type:tinyint;default:0;comment:1-勾选 0-未勾选" json:"check_type"`
+//	Type           sql.NullString `gorm:"column:type;type:varchar(255);comment:类型" json:"type"`
+//
+// SaveDepartments implements biz.AccountRepo.
+func (r *accountRepo) SaveDepartments(ctx context.Context, departments []*biz.DingtalkDept) (int, error) {
+	entities := make([]*models.TbLasDepartment, 0, len(departments))
+	//taskId := time.Now().Format("20060102150405")
+	var taskIds []string
+	for i := 1; i <= len(departments); i++ {
+		taskId := time.Now().Add(time.Duration(i) * time.Second).Format("20060102150405")
+		taskIds = append(taskIds, taskId)
 	}
+	for index, dep := range departments {
+		entities = append(entities, &models.TbLasDepartment{
+			Did:            strconv.FormatInt(dep.DeptID, 10),
+			TaskID:         taskIds[index],
+			Name:           dep.Name,
+			ThirdCompanyID: ThirdCompanyID,
+			PlatformID:     PlatformID,
+			Pid:            sql.NullString{String: strconv.FormatInt(dep.ParentID, 10), Valid: true},
+			Order:          int(dep.Order),
+			Source:         "sync",
+			Ctime:          sql.NullTime{Time: time.Now(), Valid: true},
+			Mtime:          time.Now(),
+			CheckType:      1,
+			//Type:           sql.NullString{String: "dept", Valid: true},
+		})
+	}
+	result := r.data.db.WithContext(ctx).Create(&entities)
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return int(result.RowsAffected), nil
 }
 
-func (r *accountRepo) Save(ctx context.Context, a *biz.Account) (*biz.Account, error) {
-	acc := &models.Account{
-		Username:  a.Username,
-		Email:     a.Email,
-		Phone:     a.Phone,
-		Password:  a.Password,
-		Status:    a.Status,
-		CreatedAt: time.Now().Unix(),
-		UpdatedAt: time.Now().Unix(),
-	}
-	if err := r.data.db.Create(acc).Error; err != nil {
-		return nil, err
-	}
-	return &biz.Account{
-		ID:        acc.ID,
-		Username:  acc.Username,
-		Email:     acc.Email,
-		Phone:     acc.Phone,
-		Password:  acc.Password,
-		Status:    acc.Status,
-		CreatedAt: acc.CreatedAt,
-		UpdatedAt: acc.UpdatedAt,
-	}, nil
-}
-func (r *accountRepo) Update(ctx context.Context, a *biz.Account) (*biz.Account, error) {
-	return a, nil
-}
-func (r *accountRepo) FindByID(ctx context.Context, id int64) (*biz.Account, error) {
-	r.log.Infof("data.FindByID: %v", id)
-	var acc models.Account
-	if err := r.data.db.Where("id = ?", id).First(&acc).Error; err != nil {
-		return nil, err
-	}
-	return &biz.Account{
-		ID:        acc.ID,
-		Username:  acc.Username,
-		Email:     acc.Email,
-		Phone:     acc.Phone,
-		Password:  acc.Password,
-		Status:    acc.Status,
-		CreatedAt: acc.CreatedAt,
-		UpdatedAt: acc.UpdatedAt,
-	}, nil
-}
-func (r *accountRepo) ListAll(ctx context.Context) ([]*biz.Account, error) {
-	return nil, nil
+// SaveDepartmentUserRelations implements biz.AccountRepo.
+func (r *accountRepo) SaveDepartmentUserRelations(ctx context.Context, departmentUsers []*biz.DingtalkDeptUserRelation) (int, error) {
+	return 0, nil
 }

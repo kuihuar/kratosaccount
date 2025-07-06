@@ -7,10 +7,10 @@ server:
     timeout: 1s
 data:
   database:
-    # driver: mysql
-    # source: root:root@tcp(127.0.0.1:3306)/test?parseTime=True&loc=Local
-    driver: sqlite
-    source: "file:data/nancalacc.db?cache=shared&mode=rwc&_journal_mode=WAL"
+    driver: mysql
+    source: root:|$tN_Rw!-"Eu<[50@tcp(127.0.0.1:3306)/nancalacc?timeout=15s&charset=utf8mb4
+    # driver: sqlite
+    # source: "file:data/nancalacc.db?cache=shared&mode=rwc&_journal_mode=WAL"
     # log_level: info
     # slow_threshold: 200
   redis:

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: account/v1/account.proto
+// source: api/account/v1/account.proto
 
 package v1
 
@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,22 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Account_CreateAccount_FullMethodName = "/api.account.v1.Account/CreateAccount"
-	Account_UpdateAccount_FullMethodName = "/api.account.v1.Account/UpdateAccount"
-	Account_DeleteAccount_FullMethodName = "/api.account.v1.Account/DeleteAccount"
-	Account_GetAccount_FullMethodName    = "/api.account.v1.Account/GetAccount"
-	Account_ListAccount_FullMethodName   = "/api.account.v1.Account/ListAccount"
+	Account_CreateSyncAccount_FullMethodName = "/api.account.v1.Account/CreateSyncAccount"
+	Account_GetSyncAccount_FullMethodName    = "/api.account.v1.Account/GetSyncAccount"
+	Account_CancelSyncTask_FullMethodName    = "/api.account.v1.Account/CancelSyncTask"
 )
 
 // AccountClient is the client API for Account service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountClient interface {
-	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountReply, error)
-	UpdateAccount(ctx context.Context, in *UpdateAccountRequest, opts ...grpc.CallOption) (*UpdateAccountReply, error)
-	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountReply, error)
-	GetAccount(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*GetAccountReply, error)
-	ListAccount(ctx context.Context, in *ListAccountRequest, opts ...grpc.CallOption) (*ListAccountReply, error)
+	CreateSyncAccount(ctx context.Context, in *CreateSyncAccountRequest, opts ...grpc.CallOption) (*CreateSyncAccountReply, error)
+	GetSyncAccount(ctx context.Context, in *GetSyncAccountRequest, opts ...grpc.CallOption) (*GetSyncAccountReply, error)
+	CancelSyncTask(ctx context.Context, in *CancelSyncAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type accountClient struct {
@@ -45,50 +42,30 @@ func NewAccountClient(cc grpc.ClientConnInterface) AccountClient {
 	return &accountClient{cc}
 }
 
-func (c *accountClient) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountReply, error) {
+func (c *accountClient) CreateSyncAccount(ctx context.Context, in *CreateSyncAccountRequest, opts ...grpc.CallOption) (*CreateSyncAccountReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateAccountReply)
-	err := c.cc.Invoke(ctx, Account_CreateAccount_FullMethodName, in, out, cOpts...)
+	out := new(CreateSyncAccountReply)
+	err := c.cc.Invoke(ctx, Account_CreateSyncAccount_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *accountClient) UpdateAccount(ctx context.Context, in *UpdateAccountRequest, opts ...grpc.CallOption) (*UpdateAccountReply, error) {
+func (c *accountClient) GetSyncAccount(ctx context.Context, in *GetSyncAccountRequest, opts ...grpc.CallOption) (*GetSyncAccountReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateAccountReply)
-	err := c.cc.Invoke(ctx, Account_UpdateAccount_FullMethodName, in, out, cOpts...)
+	out := new(GetSyncAccountReply)
+	err := c.cc.Invoke(ctx, Account_GetSyncAccount_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *accountClient) DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountReply, error) {
+func (c *accountClient) CancelSyncTask(ctx context.Context, in *CancelSyncAccountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteAccountReply)
-	err := c.cc.Invoke(ctx, Account_DeleteAccount_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *accountClient) GetAccount(ctx context.Context, in *GetAccountRequest, opts ...grpc.CallOption) (*GetAccountReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAccountReply)
-	err := c.cc.Invoke(ctx, Account_GetAccount_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *accountClient) ListAccount(ctx context.Context, in *ListAccountRequest, opts ...grpc.CallOption) (*ListAccountReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListAccountReply)
-	err := c.cc.Invoke(ctx, Account_ListAccount_FullMethodName, in, out, cOpts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Account_CancelSyncTask_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,11 +76,9 @@ func (c *accountClient) ListAccount(ctx context.Context, in *ListAccountRequest,
 // All implementations must embed UnimplementedAccountServer
 // for forward compatibility.
 type AccountServer interface {
-	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountReply, error)
-	UpdateAccount(context.Context, *UpdateAccountRequest) (*UpdateAccountReply, error)
-	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountReply, error)
-	GetAccount(context.Context, *GetAccountRequest) (*GetAccountReply, error)
-	ListAccount(context.Context, *ListAccountRequest) (*ListAccountReply, error)
+	CreateSyncAccount(context.Context, *CreateSyncAccountRequest) (*CreateSyncAccountReply, error)
+	GetSyncAccount(context.Context, *GetSyncAccountRequest) (*GetSyncAccountReply, error)
+	CancelSyncTask(context.Context, *CancelSyncAccountRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAccountServer()
 }
 
@@ -114,20 +89,14 @@ type AccountServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAccountServer struct{}
 
-func (UnimplementedAccountServer) CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
+func (UnimplementedAccountServer) CreateSyncAccount(context.Context, *CreateSyncAccountRequest) (*CreateSyncAccountReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSyncAccount not implemented")
 }
-func (UnimplementedAccountServer) UpdateAccount(context.Context, *UpdateAccountRequest) (*UpdateAccountReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAccount not implemented")
+func (UnimplementedAccountServer) GetSyncAccount(context.Context, *GetSyncAccountRequest) (*GetSyncAccountReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSyncAccount not implemented")
 }
-func (UnimplementedAccountServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccount not implemented")
-}
-func (UnimplementedAccountServer) GetAccount(context.Context, *GetAccountRequest) (*GetAccountReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAccount not implemented")
-}
-func (UnimplementedAccountServer) ListAccount(context.Context, *ListAccountRequest) (*ListAccountReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAccount not implemented")
+func (UnimplementedAccountServer) CancelSyncTask(context.Context, *CancelSyncAccountRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelSyncTask not implemented")
 }
 func (UnimplementedAccountServer) mustEmbedUnimplementedAccountServer() {}
 func (UnimplementedAccountServer) testEmbeddedByValue()                 {}
@@ -150,92 +119,56 @@ func RegisterAccountServer(s grpc.ServiceRegistrar, srv AccountServer) {
 	s.RegisterService(&Account_ServiceDesc, srv)
 }
 
-func _Account_CreateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAccountRequest)
+func _Account_CreateSyncAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSyncAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServer).CreateAccount(ctx, in)
+		return srv.(AccountServer).CreateSyncAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Account_CreateAccount_FullMethodName,
+		FullMethod: Account_CreateSyncAccount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServer).CreateAccount(ctx, req.(*CreateAccountRequest))
+		return srv.(AccountServer).CreateSyncAccount(ctx, req.(*CreateSyncAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Account_UpdateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAccountRequest)
+func _Account_GetSyncAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSyncAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServer).UpdateAccount(ctx, in)
+		return srv.(AccountServer).GetSyncAccount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Account_UpdateAccount_FullMethodName,
+		FullMethod: Account_GetSyncAccount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServer).UpdateAccount(ctx, req.(*UpdateAccountRequest))
+		return srv.(AccountServer).GetSyncAccount(ctx, req.(*GetSyncAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Account_DeleteAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteAccountRequest)
+func _Account_CancelSyncTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelSyncAccountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServer).DeleteAccount(ctx, in)
+		return srv.(AccountServer).CancelSyncTask(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Account_DeleteAccount_FullMethodName,
+		FullMethod: Account_CancelSyncTask_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServer).DeleteAccount(ctx, req.(*DeleteAccountRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Account_GetAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAccountRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccountServer).GetAccount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Account_GetAccount_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServer).GetAccount(ctx, req.(*GetAccountRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Account_ListAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAccountRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AccountServer).ListAccount(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Account_ListAccount_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServer).ListAccount(ctx, req.(*ListAccountRequest))
+		return srv.(AccountServer).CancelSyncTask(ctx, req.(*CancelSyncAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -248,26 +181,18 @@ var Account_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AccountServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateAccount",
-			Handler:    _Account_CreateAccount_Handler,
+			MethodName: "CreateSyncAccount",
+			Handler:    _Account_CreateSyncAccount_Handler,
 		},
 		{
-			MethodName: "UpdateAccount",
-			Handler:    _Account_UpdateAccount_Handler,
+			MethodName: "GetSyncAccount",
+			Handler:    _Account_GetSyncAccount_Handler,
 		},
 		{
-			MethodName: "DeleteAccount",
-			Handler:    _Account_DeleteAccount_Handler,
-		},
-		{
-			MethodName: "GetAccount",
-			Handler:    _Account_GetAccount_Handler,
-		},
-		{
-			MethodName: "ListAccount",
-			Handler:    _Account_ListAccount_Handler,
+			MethodName: "CancelSyncTask",
+			Handler:    _Account_CancelSyncTask_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "account/v1/account.proto",
+	Metadata: "api/account/v1/account.proto",
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.4
 // - protoc             v5.29.3
-// source: account/v1/account.proto
+// source: api/account/v1/account.proto
 
 package v1
 
@@ -10,6 +10,7 @@ import (
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,142 +20,93 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationAccountCreateAccount = "/api.account.v1.Account/CreateAccount"
-const OperationAccountDeleteAccount = "/api.account.v1.Account/DeleteAccount"
-const OperationAccountGetAccount = "/api.account.v1.Account/GetAccount"
-const OperationAccountListAccount = "/api.account.v1.Account/ListAccount"
-const OperationAccountUpdateAccount = "/api.account.v1.Account/UpdateAccount"
+const OperationAccountCancelSyncTask = "/api.account.v1.Account/CancelSyncTask"
+const OperationAccountCreateSyncAccount = "/api.account.v1.Account/CreateSyncAccount"
+const OperationAccountGetSyncAccount = "/api.account.v1.Account/GetSyncAccount"
 
 type AccountHTTPServer interface {
-	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountReply, error)
-	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountReply, error)
-	GetAccount(context.Context, *GetAccountRequest) (*GetAccountReply, error)
-	ListAccount(context.Context, *ListAccountRequest) (*ListAccountReply, error)
-	UpdateAccount(context.Context, *UpdateAccountRequest) (*UpdateAccountReply, error)
+	CancelSyncTask(context.Context, *CancelSyncAccountRequest) (*emptypb.Empty, error)
+	CreateSyncAccount(context.Context, *CreateSyncAccountRequest) (*CreateSyncAccountReply, error)
+	GetSyncAccount(context.Context, *GetSyncAccountRequest) (*GetSyncAccountReply, error)
 }
 
 func RegisterAccountHTTPServer(s *http.Server, srv AccountHTTPServer) {
 	r := s.Route("/")
-	r.POST("/v1/account", _Account_CreateAccount0_HTTP_Handler(srv))
-	r.PATCH("/v1/account", _Account_UpdateAccount0_HTTP_Handler(srv))
-	r.DELETE("/v1/account", _Account_DeleteAccount0_HTTP_Handler(srv))
-	r.GET("/v1/account/{id}", _Account_GetAccount0_HTTP_Handler(srv))
-	r.GET("/v1/accounts", _Account_ListAccount0_HTTP_Handler(srv))
+	r.POST("/v1/account", _Account_CreateSyncAccount0_HTTP_Handler(srv))
+	r.GET("/v1/account/{task_id}", _Account_GetSyncAccount0_HTTP_Handler(srv))
+	r.DELETE("/v1/account/{task_id}", _Account_CancelSyncTask0_HTTP_Handler(srv))
 }
 
-func _Account_CreateAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
+func _Account_CreateSyncAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in CreateAccountRequest
+		var in CreateSyncAccountRequest
 		if err := ctx.Bind(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAccountCreateAccount)
+		http.SetOperation(ctx, OperationAccountCreateSyncAccount)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CreateAccount(ctx, req.(*CreateAccountRequest))
+			return srv.CreateSyncAccount(ctx, req.(*CreateSyncAccountRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*CreateAccountReply)
+		reply := out.(*CreateSyncAccountReply)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _Account_UpdateAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
+func _Account_GetSyncAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in UpdateAccountRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAccountUpdateAccount)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.UpdateAccount(ctx, req.(*UpdateAccountRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*UpdateAccountReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _Account_DeleteAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in DeleteAccountRequest
-		if err := ctx.Bind(&in); err != nil {
-			return err
-		}
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationAccountDeleteAccount)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.DeleteAccount(ctx, req.(*DeleteAccountRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*DeleteAccountReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _Account_GetAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in GetAccountRequest
+		var in GetSyncAccountRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		if err := ctx.BindVars(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAccountGetAccount)
+		http.SetOperation(ctx, OperationAccountGetSyncAccount)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.GetAccount(ctx, req.(*GetAccountRequest))
+			return srv.GetSyncAccount(ctx, req.(*GetSyncAccountRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*GetAccountReply)
+		reply := out.(*GetSyncAccountReply)
 		return ctx.Result(200, reply)
 	}
 }
 
-func _Account_ListAccount0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
+func _Account_CancelSyncTask0_HTTP_Handler(srv AccountHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in ListAccountRequest
+		var in CancelSyncAccountRequest
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		http.SetOperation(ctx, OperationAccountListAccount)
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationAccountCancelSyncTask)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.ListAccount(ctx, req.(*ListAccountRequest))
+			return srv.CancelSyncTask(ctx, req.(*CancelSyncAccountRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
 			return err
 		}
-		reply := out.(*ListAccountReply)
+		reply := out.(*emptypb.Empty)
 		return ctx.Result(200, reply)
 	}
 }
 
 type AccountHTTPClient interface {
-	CreateAccount(ctx context.Context, req *CreateAccountRequest, opts ...http.CallOption) (rsp *CreateAccountReply, err error)
-	DeleteAccount(ctx context.Context, req *DeleteAccountRequest, opts ...http.CallOption) (rsp *DeleteAccountReply, err error)
-	GetAccount(ctx context.Context, req *GetAccountRequest, opts ...http.CallOption) (rsp *GetAccountReply, err error)
-	ListAccount(ctx context.Context, req *ListAccountRequest, opts ...http.CallOption) (rsp *ListAccountReply, err error)
-	UpdateAccount(ctx context.Context, req *UpdateAccountRequest, opts ...http.CallOption) (rsp *UpdateAccountReply, err error)
+	CancelSyncTask(ctx context.Context, req *CancelSyncAccountRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	CreateSyncAccount(ctx context.Context, req *CreateSyncAccountRequest, opts ...http.CallOption) (rsp *CreateSyncAccountReply, err error)
+	GetSyncAccount(ctx context.Context, req *GetSyncAccountRequest, opts ...http.CallOption) (rsp *GetSyncAccountReply, err error)
 }
 
 type AccountHTTPClientImpl struct {
@@ -165,11 +117,24 @@ func NewAccountHTTPClient(client *http.Client) AccountHTTPClient {
 	return &AccountHTTPClientImpl{client}
 }
 
-func (c *AccountHTTPClientImpl) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...http.CallOption) (*CreateAccountReply, error) {
-	var out CreateAccountReply
+func (c *AccountHTTPClientImpl) CancelSyncTask(ctx context.Context, in *CancelSyncAccountRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/v1/account/{task_id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationAccountCancelSyncTask))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *AccountHTTPClientImpl) CreateSyncAccount(ctx context.Context, in *CreateSyncAccountRequest, opts ...http.CallOption) (*CreateSyncAccountReply, error) {
+	var out CreateSyncAccountReply
 	pattern := "/v1/account"
 	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationAccountCreateAccount))
+	opts = append(opts, http.Operation(OperationAccountCreateSyncAccount))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
@@ -178,52 +143,13 @@ func (c *AccountHTTPClientImpl) CreateAccount(ctx context.Context, in *CreateAcc
 	return &out, nil
 }
 
-func (c *AccountHTTPClientImpl) DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...http.CallOption) (*DeleteAccountReply, error) {
-	var out DeleteAccountReply
-	pattern := "/v1/account"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationAccountDeleteAccount))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "DELETE", path, in, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *AccountHTTPClientImpl) GetAccount(ctx context.Context, in *GetAccountRequest, opts ...http.CallOption) (*GetAccountReply, error) {
-	var out GetAccountReply
-	pattern := "/v1/account/{id}"
+func (c *AccountHTTPClientImpl) GetSyncAccount(ctx context.Context, in *GetSyncAccountRequest, opts ...http.CallOption) (*GetSyncAccountReply, error) {
+	var out GetSyncAccountReply
+	pattern := "/v1/account/{task_id}"
 	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAccountGetAccount))
+	opts = append(opts, http.Operation(OperationAccountGetSyncAccount))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *AccountHTTPClientImpl) ListAccount(ctx context.Context, in *ListAccountRequest, opts ...http.CallOption) (*ListAccountReply, error) {
-	var out ListAccountReply
-	pattern := "/v1/accounts"
-	path := binding.EncodeURL(pattern, in, true)
-	opts = append(opts, http.Operation(OperationAccountListAccount))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &out, nil
-}
-
-func (c *AccountHTTPClientImpl) UpdateAccount(ctx context.Context, in *UpdateAccountRequest, opts ...http.CallOption) (*UpdateAccountReply, error) {
-	var out UpdateAccountReply
-	pattern := "/v1/account"
-	path := binding.EncodeURL(pattern, in, false)
-	opts = append(opts, http.Operation(OperationAccountUpdateAccount))
-	opts = append(opts, http.PathTemplate(pattern))
-	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

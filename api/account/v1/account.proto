@@ -3,6 +3,8 @@ syntax = "proto3";
 package api.account.v1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto"; 
 
 option go_package = "nancalacc/api/account/v1;v1";
 option java_multiple_files = true;
@@ -13,84 +15,71 @@ option java_outer_classname = "AccountProtoV1";
 
 
 
-
-
 service Account {
-	rpc CreateAccount (CreateAccountRequest) returns (CreateAccountReply){
+	rpc CreateSyncAccount (CreateSyncAccountRequest) returns (CreateSyncAccountReply){
 		option (google.api.http) = {
 			post: "/v1/account"
 			body: "*"
 		};
 	};
-	rpc UpdateAccount (UpdateAccountRequest) returns (UpdateAccountReply){
+	rpc GetSyncAccount (GetSyncAccountRequest) returns (GetSyncAccountReply){
 		option (google.api.http) = {
-			patch: "/v1/account"
-			body: "*"
+			get: "/v1/account/{task_id}"
 		};
 	};
-	rpc DeleteAccount (DeleteAccountRequest) returns (DeleteAccountReply){
+	rpc CancelSyncTask (CancelSyncAccountRequest) returns (google.protobuf.Empty){
 		option (google.api.http) = {
-			delete: "/v1/account"
-			body: "*"
-		};
-	};
-	rpc GetAccount (GetAccountRequest) returns (GetAccountReply){
-		option (google.api.http) = {
-			get: "/v1/account/{id}"
-		};
-	};
-	rpc ListAccount (ListAccountRequest) returns (ListAccountReply){
-		option (google.api.http) = {
-			get: "/v1/accounts"
+			delete: "/v1/account/{task_id}"
 		};
 	};
 }
 
-message UserInfo {
-  int64 id = 1;
-  string username = 2;
-  string email = 3;
-  string phone = 4;
-  int32 status = 5;
-  string created_at = 6;
-  string updated_at = 7;
-}
-message CreateAccountRequest {
-  string username = 1;
-  string email = 2;
-  string phone = 3;
-  string password = 4;
-  int32 status = 5;
-}
-message CreateAccountReply {}
 
-message UpdateAccountRequest {
-  int64 id = 1;
-  string username = 2;
-  string email = 3;
-  string phone = 4;
-  int32 status = 5;
-}
-message UpdateAccountReply {
-	int32 num = 1;
+
+
+
+enum TriggerType {
+  TRIGGER_UNKNOWN = 0;  // 未知触发方式（默认值）
+  TRIGGER_MANUAL = 1;   // 手动触发（如管理员点击按钮）
+  TRIGGER_SCHEDULED = 2; // 定时任务触发（如每天凌晨2点自动同步）
 }
 
-message DeleteAccountRequest {
-  int64 id = 1;
-}
-message DeleteAccountReply {}
+enum SyncType {
+    FULL = 0;    // 全量同步
+    INCREMENTAL = 1; // 增量同步
+  }
 
-message GetAccountRequest {
-  int64 id = 1;
+
+// 创建同步请求
+message CreateSyncAccountRequest {
+	TriggerType trigger_type = 1; // 触发类型
+	SyncType sync_type = 2;  // 同步类型
 }
-message GetAccountReply {
-  UserInfo user = 1;
+// 创建同步响应
+message CreateSyncAccountReply {
+	string task_id = 1;      // 生成的任务ID
+  	google.protobuf.Timestamp create_time = 2; // 任务创建时间
 }
 
-message ListAccountRequest {
-  int32 page = 1;
-  int32 page_size = 2;
+// 查询同步请求
+message GetSyncAccountRequest {
+	string task_id = 1;      // 要查询的任务ID
 }
-message ListAccountReply {
-  repeated UserInfo users = 1;
+// 查询同步响应
+message GetSyncAccountReply {
+	enum Status {
+    PENDING = 0;   // 待执行
+    RUNNING = 1;   // 执行中
+    SUCCESS = 2;   // 成功
+    FAILED = 3;    // 失败
+  }
+	Status status = 1;
+	int64 user_count = 2;
+	int64 department_count = 3;
+	int64 user_department_relation_count = 4;
+	google.protobuf.Timestamp latest_sync_time = 5;
+}
+
+message CancelSyncAccountRequest {
+	string task_id = 1;      // 要删除的任务ID
 }

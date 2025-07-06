@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v5.29.3
-// source: account/v1/account.proto
+// source: api/account/v1/account.proto
 
 package v1
 
@@ -10,6 +10,8 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,34 +24,177 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type UserInfo struct {
+type TriggerType int32
+
+const (
+	TriggerType_TRIGGER_UNKNOWN   TriggerType = 0 // 未知触发方式（默认值）
+	TriggerType_TRIGGER_MANUAL    TriggerType = 1 // 手动触发（如管理员点击按钮）
+	TriggerType_TRIGGER_SCHEDULED TriggerType = 2 // 定时任务触发（如每天凌晨2点自动同步）
+)
+
+// Enum value maps for TriggerType.
+var (
+	TriggerType_name = map[int32]string{
+		0: "TRIGGER_UNKNOWN",
+		1: "TRIGGER_MANUAL",
+		2: "TRIGGER_SCHEDULED",
+	}
+	TriggerType_value = map[string]int32{
+		"TRIGGER_UNKNOWN":   0,
+		"TRIGGER_MANUAL":    1,
+		"TRIGGER_SCHEDULED": 2,
+	}
+)
+
+func (x TriggerType) Enum() *TriggerType {
+	p := new(TriggerType)
+	*p = x
+	return p
+}
+
+func (x TriggerType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TriggerType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_account_v1_account_proto_enumTypes[0].Descriptor()
+}
+
+func (TriggerType) Type() protoreflect.EnumType {
+	return &file_api_account_v1_account_proto_enumTypes[0]
+}
+
+func (x TriggerType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TriggerType.Descriptor instead.
+func (TriggerType) EnumDescriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{0}
+}
+
+type SyncType int32
+
+const (
+	SyncType_FULL        SyncType = 0 // 全量同步
+	SyncType_INCREMENTAL SyncType = 1 // 增量同步
+)
+
+// Enum value maps for SyncType.
+var (
+	SyncType_name = map[int32]string{
+		0: "FULL",
+		1: "INCREMENTAL",
+	}
+	SyncType_value = map[string]int32{
+		"FULL":        0,
+		"INCREMENTAL": 1,
+	}
+)
+
+func (x SyncType) Enum() *SyncType {
+	p := new(SyncType)
+	*p = x
+	return p
+}
+
+func (x SyncType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SyncType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_account_v1_account_proto_enumTypes[1].Descriptor()
+}
+
+func (SyncType) Type() protoreflect.EnumType {
+	return &file_api_account_v1_account_proto_enumTypes[1]
+}
+
+func (x SyncType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SyncType.Descriptor instead.
+func (SyncType) EnumDescriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{1}
+}
+
+type GetSyncAccountReply_Status int32
+
+const (
+	GetSyncAccountReply_PENDING GetSyncAccountReply_Status = 0 // 待执行
+	GetSyncAccountReply_RUNNING GetSyncAccountReply_Status = 1 // 执行中
+	GetSyncAccountReply_SUCCESS GetSyncAccountReply_Status = 2 // 成功
+	GetSyncAccountReply_FAILED  GetSyncAccountReply_Status = 3 // 失败
+)
+
+// Enum value maps for GetSyncAccountReply_Status.
+var (
+	GetSyncAccountReply_Status_name = map[int32]string{
+		0: "PENDING",
+		1: "RUNNING",
+		2: "SUCCESS",
+		3: "FAILED",
+	}
+	GetSyncAccountReply_Status_value = map[string]int32{
+		"PENDING": 0,
+		"RUNNING": 1,
+		"SUCCESS": 2,
+		"FAILED":  3,
+	}
+)
+
+func (x GetSyncAccountReply_Status) Enum() *GetSyncAccountReply_Status {
+	p := new(GetSyncAccountReply_Status)
+	*p = x
+	return p
+}
+
+func (x GetSyncAccountReply_Status) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GetSyncAccountReply_Status) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_account_v1_account_proto_enumTypes[2].Descriptor()
+}
+
+func (GetSyncAccountReply_Status) Type() protoreflect.EnumType {
+	return &file_api_account_v1_account_proto_enumTypes[2]
+}
+
+func (x GetSyncAccountReply_Status) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GetSyncAccountReply_Status.Descriptor instead.
+func (GetSyncAccountReply_Status) EnumDescriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{3, 0}
+}
+
+// 创建同步请求
+type CreateSyncAccountRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	Phone         string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
-	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	TriggerType   TriggerType            `protobuf:"varint,1,opt,name=trigger_type,json=triggerType,proto3,enum=api.account.v1.TriggerType" json:"trigger_type,omitempty"` // 触发类型
+	SyncType      SyncType               `protobuf:"varint,2,opt,name=sync_type,json=syncType,proto3,enum=api.account.v1.SyncType" json:"sync_type,omitempty"`             // 同步类型
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UserInfo) Reset() {
-	*x = UserInfo{}
-	mi := &file_account_v1_account_proto_msgTypes[0]
+func (x *CreateSyncAccountRequest) Reset() {
+	*x = CreateSyncAccountRequest{}
+	mi := &file_api_account_v1_account_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UserInfo) String() string {
+func (x *CreateSyncAccountRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UserInfo) ProtoMessage() {}
+func (*CreateSyncAccountRequest) ProtoMessage() {}
 
-func (x *UserInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[0]
+func (x *CreateSyncAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_account_v1_account_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,86 +205,49 @@ func (x *UserInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UserInfo.ProtoReflect.Descriptor instead.
-func (*UserInfo) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use CreateSyncAccountRequest.ProtoReflect.Descriptor instead.
+func (*CreateSyncAccountRequest) Descriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *UserInfo) GetId() int64 {
+func (x *CreateSyncAccountRequest) GetTriggerType() TriggerType {
 	if x != nil {
-		return x.Id
+		return x.TriggerType
 	}
-	return 0
+	return TriggerType_TRIGGER_UNKNOWN
 }
 
-func (x *UserInfo) GetUsername() string {
+func (x *CreateSyncAccountRequest) GetSyncType() SyncType {
 	if x != nil {
-		return x.Username
+		return x.SyncType
 	}
-	return ""
+	return SyncType_FULL
 }
 
-func (x *UserInfo) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *UserInfo) GetPhone() string {
-	if x != nil {
-		return x.Phone
-	}
-	return ""
-}
-
-func (x *UserInfo) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-func (x *UserInfo) GetCreatedAt() string {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return ""
-}
-
-func (x *UserInfo) GetUpdatedAt() string {
-	if x != nil {
-		return x.UpdatedAt
-	}
-	return ""
-}
-
-type CreateAccountRequest struct {
+// 创建同步响应
+type CreateSyncAccountReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Phone         string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
-	Password      string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
-	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`             // 生成的任务ID
+	CreateTime    *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"` // 任务创建时间
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateAccountRequest) Reset() {
-	*x = CreateAccountRequest{}
-	mi := &file_account_v1_account_proto_msgTypes[1]
+func (x *CreateSyncAccountReply) Reset() {
+	*x = CreateSyncAccountReply{}
+	mi := &file_api_account_v1_account_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateAccountRequest) String() string {
+func (x *CreateSyncAccountReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateAccountRequest) ProtoMessage() {}
+func (*CreateSyncAccountReply) ProtoMessage() {}
 
-func (x *CreateAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[1]
+func (x *CreateSyncAccountReply) ProtoReflect() protoreflect.Message {
+	mi := &file_api_account_v1_account_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -150,393 +258,48 @@ func (x *CreateAccountRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateAccountRequest.ProtoReflect.Descriptor instead.
-func (*CreateAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use CreateSyncAccountReply.ProtoReflect.Descriptor instead.
+func (*CreateSyncAccountReply) Descriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateAccountRequest) GetUsername() string {
+func (x *CreateSyncAccountReply) GetTaskId() string {
 	if x != nil {
-		return x.Username
+		return x.TaskId
 	}
 	return ""
 }
 
-func (x *CreateAccountRequest) GetEmail() string {
+func (x *CreateSyncAccountReply) GetCreateTime() *timestamppb.Timestamp {
 	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *CreateAccountRequest) GetPhone() string {
-	if x != nil {
-		return x.Phone
-	}
-	return ""
-}
-
-func (x *CreateAccountRequest) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *CreateAccountRequest) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-type CreateAccountReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateAccountReply) Reset() {
-	*x = CreateAccountReply{}
-	mi := &file_account_v1_account_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateAccountReply) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateAccountReply) ProtoMessage() {}
-
-func (x *CreateAccountReply) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateAccountReply.ProtoReflect.Descriptor instead.
-func (*CreateAccountReply) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{2}
-}
-
-type UpdateAccountRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	Phone         string                 `protobuf:"bytes,4,opt,name=phone,proto3" json:"phone,omitempty"`
-	Status        int32                  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateAccountRequest) Reset() {
-	*x = UpdateAccountRequest{}
-	mi := &file_account_v1_account_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateAccountRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateAccountRequest) ProtoMessage() {}
-
-func (x *UpdateAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateAccountRequest.ProtoReflect.Descriptor instead.
-func (*UpdateAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *UpdateAccountRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *UpdateAccountRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *UpdateAccountRequest) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *UpdateAccountRequest) GetPhone() string {
-	if x != nil {
-		return x.Phone
-	}
-	return ""
-}
-
-func (x *UpdateAccountRequest) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-type UpdateAccountReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Num           int32                  `protobuf:"varint,1,opt,name=num,proto3" json:"num,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateAccountReply) Reset() {
-	*x = UpdateAccountReply{}
-	mi := &file_account_v1_account_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateAccountReply) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateAccountReply) ProtoMessage() {}
-
-func (x *UpdateAccountReply) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateAccountReply.ProtoReflect.Descriptor instead.
-func (*UpdateAccountReply) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *UpdateAccountReply) GetNum() int32 {
-	if x != nil {
-		return x.Num
-	}
-	return 0
-}
-
-type DeleteAccountRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteAccountRequest) Reset() {
-	*x = DeleteAccountRequest{}
-	mi := &file_account_v1_account_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteAccountRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteAccountRequest) ProtoMessage() {}
-
-func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteAccountRequest.ProtoReflect.Descriptor instead.
-func (*DeleteAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *DeleteAccountRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type DeleteAccountReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *DeleteAccountReply) Reset() {
-	*x = DeleteAccountReply{}
-	mi := &file_account_v1_account_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *DeleteAccountReply) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*DeleteAccountReply) ProtoMessage() {}
-
-func (x *DeleteAccountReply) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use DeleteAccountReply.ProtoReflect.Descriptor instead.
-func (*DeleteAccountReply) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{6}
-}
-
-type GetAccountRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAccountRequest) Reset() {
-	*x = GetAccountRequest{}
-	mi := &file_account_v1_account_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAccountRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAccountRequest) ProtoMessage() {}
-
-func (x *GetAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAccountRequest.ProtoReflect.Descriptor instead.
-func (*GetAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *GetAccountRequest) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type GetAccountReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *UserInfo              `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetAccountReply) Reset() {
-	*x = GetAccountReply{}
-	mi := &file_account_v1_account_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetAccountReply) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetAccountReply) ProtoMessage() {}
-
-func (x *GetAccountReply) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetAccountReply.ProtoReflect.Descriptor instead.
-func (*GetAccountReply) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *GetAccountReply) GetUser() *UserInfo {
-	if x != nil {
-		return x.User
+		return x.CreateTime
 	}
 	return nil
 }
 
-type ListAccountRequest struct {
+// 查询同步请求
+type GetSyncAccountRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
-	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"` // 要查询的任务ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListAccountRequest) Reset() {
-	*x = ListAccountRequest{}
-	mi := &file_account_v1_account_proto_msgTypes[9]
+func (x *GetSyncAccountRequest) Reset() {
+	*x = GetSyncAccountRequest{}
+	mi := &file_api_account_v1_account_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListAccountRequest) String() string {
+func (x *GetSyncAccountRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListAccountRequest) ProtoMessage() {}
+func (*GetSyncAccountRequest) ProtoMessage() {}
 
-func (x *ListAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[9]
+func (x *GetSyncAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_account_v1_account_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -547,47 +310,45 @@ func (x *ListAccountRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListAccountRequest.ProtoReflect.Descriptor instead.
-func (*ListAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{9}
+// Deprecated: Use GetSyncAccountRequest.ProtoReflect.Descriptor instead.
+func (*GetSyncAccountRequest) Descriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ListAccountRequest) GetPage() int32 {
+func (x *GetSyncAccountRequest) GetTaskId() string {
 	if x != nil {
-		return x.Page
+		return x.TaskId
 	}
-	return 0
+	return ""
 }
 
-func (x *ListAccountRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
+// 查询同步响应
+type GetSyncAccountReply struct {
+	state                       protoimpl.MessageState     `protogen:"open.v1"`
+	Status                      GetSyncAccountReply_Status `protobuf:"varint,1,opt,name=status,proto3,enum=api.account.v1.GetSyncAccountReply_Status" json:"status,omitempty"`
+	UserCount                   int64                      `protobuf:"varint,2,opt,name=user_count,json=userCount,proto3" json:"user_count,omitempty"`
+	DepartmentCount             int64                      `protobuf:"varint,3,opt,name=department_count,json=departmentCount,proto3" json:"department_count,omitempty"`
+	UserDepartmentRelationCount int64                      `protobuf:"varint,4,opt,name=user_department_relation_count,json=userDepartmentRelationCount,proto3" json:"user_department_relation_count,omitempty"`
+	LatestSyncTime              *timestamppb.Timestamp     `protobuf:"bytes,5,opt,name=latest_sync_time,json=latestSyncTime,proto3" json:"latest_sync_time,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
 }
 
-type ListAccountReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Users         []*UserInfo            `protobuf:"bytes,1,rep,name=users,proto3" json:"users,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListAccountReply) Reset() {
-	*x = ListAccountReply{}
-	mi := &file_account_v1_account_proto_msgTypes[10]
+func (x *GetSyncAccountReply) Reset() {
+	*x = GetSyncAccountReply{}
+	mi := &file_api_account_v1_account_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListAccountReply) String() string {
+func (x *GetSyncAccountReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListAccountReply) ProtoMessage() {}
+func (*GetSyncAccountReply) ProtoMessage() {}
 
-func (x *ListAccountReply) ProtoReflect() protoreflect.Message {
-	mi := &file_account_v1_account_proto_msgTypes[10]
+func (x *GetSyncAccountReply) ProtoReflect() protoreflect.Message {
+	mi := &file_api_account_v1_account_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -598,135 +359,198 @@ func (x *ListAccountReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListAccountReply.ProtoReflect.Descriptor instead.
-func (*ListAccountReply) Descriptor() ([]byte, []int) {
-	return file_account_v1_account_proto_rawDescGZIP(), []int{10}
+// Deprecated: Use GetSyncAccountReply.ProtoReflect.Descriptor instead.
+func (*GetSyncAccountReply) Descriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListAccountReply) GetUsers() []*UserInfo {
+func (x *GetSyncAccountReply) GetStatus() GetSyncAccountReply_Status {
 	if x != nil {
-		return x.Users
+		return x.Status
+	}
+	return GetSyncAccountReply_PENDING
+}
+
+func (x *GetSyncAccountReply) GetUserCount() int64 {
+	if x != nil {
+		return x.UserCount
+	}
+	return 0
+}
+
+func (x *GetSyncAccountReply) GetDepartmentCount() int64 {
+	if x != nil {
+		return x.DepartmentCount
+	}
+	return 0
+}
+
+func (x *GetSyncAccountReply) GetUserDepartmentRelationCount() int64 {
+	if x != nil {
+		return x.UserDepartmentRelationCount
+	}
+	return 0
+}
+
+func (x *GetSyncAccountReply) GetLatestSyncTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LatestSyncTime
 	}
 	return nil
 }
 
-var File_account_v1_account_proto protoreflect.FileDescriptor
+type CancelSyncAccountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"` // 要删除的任务ID
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
 
-const file_account_v1_account_proto_rawDesc = "" +
+func (x *CancelSyncAccountRequest) Reset() {
+	*x = CancelSyncAccountRequest{}
+	mi := &file_api_account_v1_account_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelSyncAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelSyncAccountRequest) ProtoMessage() {}
+
+func (x *CancelSyncAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_account_v1_account_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelSyncAccountRequest.ProtoReflect.Descriptor instead.
+func (*CancelSyncAccountRequest) Descriptor() ([]byte, []int) {
+	return file_api_account_v1_account_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CancelSyncAccountRequest) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
+	}
+	return ""
+}
+
+var File_api_account_v1_account_proto protoreflect.FileDescriptor
+
+const file_api_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"\x18account/v1/account.proto\x12\x0eapi.account.v1\x1a\x1cgoogle/api/annotations.proto\"\xb8\x01\n" +
-	"\bUserInfo\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
-	"\x05email\x18\x03 \x01(\tR\x05email\x12\x14\n" +
-	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\x12\x1d\n" +
+	"\x1capi/account/v1/account.proto\x12\x0eapi.account.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x91\x01\n" +
+	"\x18CreateSyncAccountRequest\x12>\n" +
+	"\ftrigger_type\x18\x01 \x01(\x0e2\x1b.api.account.v1.TriggerTypeR\vtriggerType\x125\n" +
+	"\tsync_type\x18\x02 \x01(\x0e2\x18.api.account.v1.SyncTypeR\bsyncType\"n\n" +
+	"\x16CreateSyncAccountReply\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12;\n" +
+	"\vcreate_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"createTime\"0\n" +
+	"\x15GetSyncAccountRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId\"\xeb\x02\n" +
+	"\x13GetSyncAccountReply\x12B\n" +
+	"\x06status\x18\x01 \x01(\x0e2*.api.account.v1.GetSyncAccountReply.StatusR\x06status\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"user_count\x18\x02 \x01(\x03R\tuserCount\x12)\n" +
+	"\x10department_count\x18\x03 \x01(\x03R\x0fdepartmentCount\x12C\n" +
+	"\x1euser_department_relation_count\x18\x04 \x01(\x03R\x1buserDepartmentRelationCount\x12D\n" +
+	"\x10latest_sync_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x0elatestSyncTime\";\n" +
+	"\x06Status\x12\v\n" +
+	"\aPENDING\x10\x00\x12\v\n" +
+	"\aRUNNING\x10\x01\x12\v\n" +
+	"\aSUCCESS\x10\x02\x12\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt\"\x92\x01\n" +
-	"\x14CreateAccountRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x14\n" +
-	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x1a\n" +
-	"\bpassword\x18\x04 \x01(\tR\bpassword\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\"\x14\n" +
-	"\x12CreateAccountReply\"\x86\x01\n" +
-	"\x14UpdateAccountRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
-	"\x05email\x18\x03 \x01(\tR\x05email\x12\x14\n" +
-	"\x05phone\x18\x04 \x01(\tR\x05phone\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\x05R\x06status\"&\n" +
-	"\x12UpdateAccountReply\x12\x10\n" +
-	"\x03num\x18\x01 \x01(\x05R\x03num\"&\n" +
-	"\x14DeleteAccountRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"\x14\n" +
-	"\x12DeleteAccountReply\"#\n" +
-	"\x11GetAccountRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"?\n" +
-	"\x0fGetAccountReply\x12,\n" +
-	"\x04user\x18\x01 \x01(\v2\x18.api.account.v1.UserInfoR\x04user\"E\n" +
-	"\x12ListAccountRequest\x12\x12\n" +
-	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"B\n" +
-	"\x10ListAccountReply\x12.\n" +
-	"\x05users\x18\x01 \x03(\v2\x18.api.account.v1.UserInfoR\x05users2\xb9\x04\n" +
-	"\aAccount\x12q\n" +
-	"\rCreateAccount\x12$.api.account.v1.CreateAccountRequest\x1a\".api.account.v1.CreateAccountReply\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v1/account\x12q\n" +
-	"\rUpdateAccount\x12$.api.account.v1.UpdateAccountRequest\x1a\".api.account.v1.UpdateAccountReply\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*2\v/v1/account\x12q\n" +
-	"\rDeleteAccount\x12$.api.account.v1.DeleteAccountRequest\x1a\".api.account.v1.DeleteAccountReply\"\x16\x82\xd3\xe4\x93\x02\x10:\x01**\v/v1/account\x12j\n" +
-	"\n" +
-	"GetAccount\x12!.api.account.v1.GetAccountRequest\x1a\x1f.api.account.v1.GetAccountReply\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/account/{id}\x12i\n" +
-	"\vListAccount\x12\".api.account.v1.ListAccountRequest\x1a .api.account.v1.ListAccountReply\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/accountsB?\n" +
+	"\x06FAILED\x10\x03\"3\n" +
+	"\x18CancelSyncAccountRequest\x12\x17\n" +
+	"\atask_id\x18\x01 \x01(\tR\x06taskId*M\n" +
+	"\vTriggerType\x12\x13\n" +
+	"\x0fTRIGGER_UNKNOWN\x10\x00\x12\x12\n" +
+	"\x0eTRIGGER_MANUAL\x10\x01\x12\x15\n" +
+	"\x11TRIGGER_SCHEDULED\x10\x02*%\n" +
+	"\bSyncType\x12\b\n" +
+	"\x04FULL\x10\x00\x12\x0f\n" +
+	"\vINCREMENTAL\x10\x012\xf8\x02\n" +
+	"\aAccount\x12}\n" +
+	"\x11CreateSyncAccount\x12(.api.account.v1.CreateSyncAccountRequest\x1a&.api.account.v1.CreateSyncAccountReply\"\x16\x82\xd3\xe4\x93\x02\x10:\x01*\"\v/v1/account\x12{\n" +
+	"\x0eGetSyncAccount\x12%.api.account.v1.GetSyncAccountRequest\x1a#.api.account.v1.GetSyncAccountReply\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/account/{task_id}\x12q\n" +
+	"\x0eCancelSyncTask\x12(.api.account.v1.CancelSyncAccountRequest\x1a\x16.google.protobuf.Empty\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/v1/account/{task_id}B?\n" +
 	"\x0eapi.account.v1B\x0eAccountProtoV1P\x01Z\x1bnancalacc/api/account/v1;v1b\x06proto3"
 
 var (
-	file_account_v1_account_proto_rawDescOnce sync.Once
-	file_account_v1_account_proto_rawDescData []byte
+	file_api_account_v1_account_proto_rawDescOnce sync.Once
+	file_api_account_v1_account_proto_rawDescData []byte
 )
 
-func file_account_v1_account_proto_rawDescGZIP() []byte {
-	file_account_v1_account_proto_rawDescOnce.Do(func() {
-		file_account_v1_account_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_account_v1_account_proto_rawDesc), len(file_account_v1_account_proto_rawDesc)))
+func file_api_account_v1_account_proto_rawDescGZIP() []byte {
+	file_api_account_v1_account_proto_rawDescOnce.Do(func() {
+		file_api_account_v1_account_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_account_v1_account_proto_rawDesc), len(file_api_account_v1_account_proto_rawDesc)))
 	})
-	return file_account_v1_account_proto_rawDescData
+	return file_api_account_v1_account_proto_rawDescData
 }
 
-var file_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_account_v1_account_proto_goTypes = []any{
-	(*UserInfo)(nil),             // 0: api.account.v1.UserInfo
-	(*CreateAccountRequest)(nil), // 1: api.account.v1.CreateAccountRequest
-	(*CreateAccountReply)(nil),   // 2: api.account.v1.CreateAccountReply
-	(*UpdateAccountRequest)(nil), // 3: api.account.v1.UpdateAccountRequest
-	(*UpdateAccountReply)(nil),   // 4: api.account.v1.UpdateAccountReply
-	(*DeleteAccountRequest)(nil), // 5: api.account.v1.DeleteAccountRequest
-	(*DeleteAccountReply)(nil),   // 6: api.account.v1.DeleteAccountReply
-	(*GetAccountRequest)(nil),    // 7: api.account.v1.GetAccountRequest
-	(*GetAccountReply)(nil),      // 8: api.account.v1.GetAccountReply
-	(*ListAccountRequest)(nil),   // 9: api.account.v1.ListAccountRequest
-	(*ListAccountReply)(nil),     // 10: api.account.v1.ListAccountReply
+var file_api_account_v1_account_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_api_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_api_account_v1_account_proto_goTypes = []any{
+	(TriggerType)(0),                 // 0: api.account.v1.TriggerType
+	(SyncType)(0),                    // 1: api.account.v1.SyncType
+	(GetSyncAccountReply_Status)(0),  // 2: api.account.v1.GetSyncAccountReply.Status
+	(*CreateSyncAccountRequest)(nil), // 3: api.account.v1.CreateSyncAccountRequest
+	(*CreateSyncAccountReply)(nil),   // 4: api.account.v1.CreateSyncAccountReply
+	(*GetSyncAccountRequest)(nil),    // 5: api.account.v1.GetSyncAccountRequest
+	(*GetSyncAccountReply)(nil),      // 6: api.account.v1.GetSyncAccountReply
+	(*CancelSyncAccountRequest)(nil), // 7: api.account.v1.CancelSyncAccountRequest
+	(*timestamppb.Timestamp)(nil),    // 8: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),            // 9: google.protobuf.Empty
 }
-var file_account_v1_account_proto_depIdxs = []int32{
-	0,  // 0: api.account.v1.GetAccountReply.user:type_name -> api.account.v1.UserInfo
-	0,  // 1: api.account.v1.ListAccountReply.users:type_name -> api.account.v1.UserInfo
-	1,  // 2: api.account.v1.Account.CreateAccount:input_type -> api.account.v1.CreateAccountRequest
-	3,  // 3: api.account.v1.Account.UpdateAccount:input_type -> api.account.v1.UpdateAccountRequest
-	5,  // 4: api.account.v1.Account.DeleteAccount:input_type -> api.account.v1.DeleteAccountRequest
-	7,  // 5: api.account.v1.Account.GetAccount:input_type -> api.account.v1.GetAccountRequest
-	9,  // 6: api.account.v1.Account.ListAccount:input_type -> api.account.v1.ListAccountRequest
-	2,  // 7: api.account.v1.Account.CreateAccount:output_type -> api.account.v1.CreateAccountReply
-	4,  // 8: api.account.v1.Account.UpdateAccount:output_type -> api.account.v1.UpdateAccountReply
-	6,  // 9: api.account.v1.Account.DeleteAccount:output_type -> api.account.v1.DeleteAccountReply
-	8,  // 10: api.account.v1.Account.GetAccount:output_type -> api.account.v1.GetAccountReply
-	10, // 11: api.account.v1.Account.ListAccount:output_type -> api.account.v1.ListAccountReply
-	7,  // [7:12] is the sub-list for method output_type
-	2,  // [2:7] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+var file_api_account_v1_account_proto_depIdxs = []int32{
+	0, // 0: api.account.v1.CreateSyncAccountRequest.trigger_type:type_name -> api.account.v1.TriggerType
+	1, // 1: api.account.v1.CreateSyncAccountRequest.sync_type:type_name -> api.account.v1.SyncType
+	8, // 2: api.account.v1.CreateSyncAccountReply.create_time:type_name -> google.protobuf.Timestamp
+	2, // 3: api.account.v1.GetSyncAccountReply.status:type_name -> api.account.v1.GetSyncAccountReply.Status
+	8, // 4: api.account.v1.GetSyncAccountReply.latest_sync_time:type_name -> google.protobuf.Timestamp
+	3, // 5: api.account.v1.Account.CreateSyncAccount:input_type -> api.account.v1.CreateSyncAccountRequest
+	5, // 6: api.account.v1.Account.GetSyncAccount:input_type -> api.account.v1.GetSyncAccountRequest
+	7, // 7: api.account.v1.Account.CancelSyncTask:input_type -> api.account.v1.CancelSyncAccountRequest
+	4, // 8: api.account.v1.Account.CreateSyncAccount:output_type -> api.account.v1.CreateSyncAccountReply
+	6, // 9: api.account.v1.Account.GetSyncAccount:output_type -> api.account.v1.GetSyncAccountReply
+	9, // 10: api.account.v1.Account.CancelSyncTask:output_type -> google.protobuf.Empty
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_account_v1_account_proto_init() }
-func file_account_v1_account_proto_init() {
-	if File_account_v1_account_proto != nil {
+func init() { file_api_account_v1_account_proto_init() }
+func file_api_account_v1_account_proto_init() {
+	if File_api_account_v1_account_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_account_v1_account_proto_rawDesc), len(file_account_v1_account_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   11,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_account_v1_account_proto_rawDesc), len(file_api_account_v1_account_proto_rawDesc)),
+			NumEnums:      3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_account_v1_account_proto_goTypes,
-		DependencyIndexes: file_account_v1_account_proto_depIdxs,
-		MessageInfos:      file_account_v1_account_proto_msgTypes,
+		GoTypes:           file_api_account_v1_account_proto_goTypes,
+		DependencyIndexes: file_api_account_v1_account_proto_depIdxs,
+		EnumInfos:         file_api_account_v1_account_proto_enumTypes,
+		MessageInfos:      file_api_account_v1_account_proto_msgTypes,
 	}.Build()
-	File_account_v1_account_proto = out.File
-	file_account_v1_account_proto_goTypes = nil
-	file_account_v1_account_proto_depIdxs = nil
+	File_api_account_v1_account_proto = out.File
+	file_api_account_v1_account_proto_goTypes = nil
+	file_api_account_v1_account_proto_depIdxs = nil
 }

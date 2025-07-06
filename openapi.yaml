@@ -3,38 +3,19 @@
 
 openapi: 3.0.3
 info:
-    title: ""
+    title: Account API
     version: 0.0.1
 paths:
-    /helloworld/{name}:
-        get:
-            tags:
-                - Greeter
-            description: Sends a greeting
-            operationId: Greeter_SayHello
-            parameters:
-                - name: name
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
     /v1/account:
         post:
             tags:
                 - Account
-            operationId: Account_CreateAccount
+            operationId: Account_CreateSyncAccount
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/api.account.v1.CreateAccountRequest'
+                            $ref: '#/components/schemas/CreateSyncAccountRequest'
                 required: true
             responses:
                 "200":
@@ -42,48 +23,20 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.account.v1.CreateAccountReply'
-        delete:
-            tags:
-                - Account
-            operationId: Account_DeleteAccount
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/api.account.v1.DeleteAccountRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
+                                $ref: '#/components/schemas/CreateSyncAccountReply'
+                default:
+                    description: Default error response
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.account.v1.DeleteAccountReply'
-        patch:
-            tags:
-                - Account
-            operationId: Account_UpdateAccount
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/api.account.v1.UpdateAccountRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/api.account.v1.UpdateAccountReply'
-    /v1/account/{id}:
+                                $ref: '#/components/schemas/Status'
+    /v1/account/{taskId}:
         get:
             tags:
                 - Account
-            operationId: Account_GetAccount
+            operationId: Account_GetSyncAccount
             parameters:
-                - name: id
+                - name: taskId
                   in: path
                   required: true
                   schema:
@@ -94,114 +47,93 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.account.v1.GetAccountReply'
-    /v1/accounts:
-        get:
-            tags:
-                - Account
-            operationId: Account_ListAccount
-            parameters:
-                - name: page
-                  in: query
-                  schema:
-                    type: integer
-                    format: int32
-                - name: pageSize
-                  in: query
-                  schema:
-                    type: integer
-                    format: int32
-            responses:
-                "200":
-                    description: OK
+                                $ref: '#/components/schemas/GetSyncAccountReply'
+                default:
+                    description: Default error response
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.account.v1.ListAccountReply'
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - Account
+            operationId: Account_CancelSyncTask
+            parameters:
+                - name: taskId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
-        api.account.v1.CreateAccountReply:
-            type: object
-            properties: {}
-        api.account.v1.CreateAccountRequest:
+        CreateSyncAccountReply:
             type: object
             properties:
-                username:
+                taskId:
                     type: string
-                email:
+                createTime:
                     type: string
-                phone:
-                    type: string
-                password:
-                    type: string
+                    format: date-time
+            description: 创建同步响应
+        CreateSyncAccountRequest:
+            type: object
+            properties:
+                triggerType:
+                    type: integer
+                    format: enum
+                syncType:
+                    type: integer
+                    format: enum
+            description: 创建同步请求
+        GetSyncAccountReply:
+            type: object
+            properties:
                 status:
                     type: integer
-                    format: int32
-        api.account.v1.DeleteAccountReply:
-            type: object
-            properties: {}
-        api.account.v1.DeleteAccountRequest:
-            type: object
-            properties:
-                id:
+                    format: enum
+                userCount:
                     type: string
-        api.account.v1.GetAccountReply:
+                departmentCount:
+                    type: string
+                userDepartmentRelationCount:
+                    type: string
+                latestSyncTime:
+                    type: string
+                    format: date-time
+            description: 查询同步响应
+        GoogleProtobufAny:
             type: object
             properties:
-                user:
-                    $ref: '#/components/schemas/api.account.v1.UserInfo'
-        api.account.v1.ListAccountReply:
+                '@type':
+                    type: string
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        Status:
             type: object
             properties:
-                users:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/api.account.v1.UserInfo'
-        api.account.v1.UpdateAccountReply:
-            type: object
-            properties:
-                num:
+                code:
                     type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
                     format: int32
-        api.account.v1.UpdateAccountRequest:
-            type: object
-            properties:
-                id:
-                    type: string
-                username:
-                    type: string
-                email:
-                    type: string
-                phone:
-                    type: string
-                status:
-                    type: integer
-                    format: int32
-        api.account.v1.UserInfo:
-            type: object
-            properties:
-                id:
-                    type: string
-                username:
-                    type: string
-                email:
-                    type: string
-                phone:
-                    type: string
-                status:
-                    type: integer
-                    format: int32
-                createdAt:
-                    type: string
-                updatedAt:
-                    type: string
-        helloworld.v1.HelloReply:
-            type: object
-            properties:
                 message:
                     type: string
-            description: The response message containing the greetings
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
 tags:
     - name: Account
-    - name: Greeter
-      description: The greeting service definition.

@@ -2,17 +2,19 @@ package service
 
 import (
 	"context"
-	"time"
 
-	//pb "nancalacc/api/account/v1"
-	v1 "nancalacc/api/account/v1"
+	accountV1 "nancalacc/api/account/v1"
+
 	"nancalacc/internal/biz"
+
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
 
 type AccountService struct {
-	v1.UnimplementedAccountServer
+	accountV1.UnimplementedAccountServer
 	accUsecase *biz.AccountUsecase
 	logger     *log.Helper
 }
@@ -23,55 +25,20 @@ func NewAccountService(accUsecase *biz.AccountUsecase, logger log.Logger) *Accou
 		logger:     log.NewHelper(logger),
 	}
 }
-
-func (s *AccountService) CreateAccount(ctx context.Context, req *v1.CreateAccountRequest) (*v1.CreateAccountReply, error) {
-	_, err := s.accUsecase.CreateAccount(ctx, &biz.Account{
-		Username: req.Username,
-		Phone:    req.Phone,
-		Email:    req.Email,
-		Password: "123456",
-	})
-
+func (s *AccountService) CreateSyncAccount(ctx context.Context, req *accountV1.CreateSyncAccountRequest) (*accountV1.CreateSyncAccountReply, error) {
+	s.logger.Infof("CreateSyncAccount req: %v", req)
+	_, err := s.accUsecase.CreateSyncAccount(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-
-	return &v1.CreateAccountReply{}, nil
-	//return &pb.CreateAccountReply{}, nil
-}
-func (s *AccountService) UpdateAccount(ctx context.Context, req *v1.UpdateAccountRequest) (*v1.UpdateAccountReply, error) {
-	s.logger.WithContext(ctx).Infof("req: %v", req)
-	num, err := s.accUsecase.SyncAccount(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &v1.UpdateAccountReply{
-		Num: int32(num),
+	return &accountV1.CreateSyncAccountReply{
+		TaskId:     "10",
+		CreateTime: timestamppb.Now(),
 	}, nil
 }
-func (s *AccountService) DeleteAccount(ctx context.Context, req *v1.DeleteAccountRequest) (*v1.DeleteAccountReply, error) {
-	return &v1.DeleteAccountReply{}, nil
+func (s *AccountService) GetSyncAccount(ctx context.Context, req *accountV1.GetSyncAccountRequest) (*accountV1.GetSyncAccountReply, error) {
+	return &accountV1.GetSyncAccountReply{}, nil
 }
-func (s *AccountService) GetAccount(ctx context.Context, req *v1.GetAccountRequest) (*v1.GetAccountReply, error) {
-
-	s.logger.WithContext(ctx).Infof("req: %v", req)
-
-	acc, err := s.accUsecase.GetAccountByID(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-	return &v1.GetAccountReply{
-		User: &v1.UserInfo{
-			Id:        acc.ID,
-			Username:  acc.Username,
-			Phone:     acc.Phone,
-			Email:     acc.Email,
-			Status:    acc.Status,
-			CreatedAt: time.Unix(acc.CreatedAt, 0).Format(time.RFC3339),
-			UpdatedAt: time.Unix(acc.UpdatedAt, 0).Format(time.RFC3339),
-		},
-	}, nil
-}
-func (s *AccountService) ListAccount(ctx context.Context, req *v1.ListAccountRequest) (*v1.ListAccountReply, error) {
-	return &v1.ListAccountReply{}, nil
+func (s *AccountService) CancelSyncTask(ctx context.Context, req *accountV1.CancelSyncAccountRequest) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }
