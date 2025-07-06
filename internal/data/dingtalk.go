@@ -33,9 +33,21 @@ func (r *dingTalkRepo) FetchDepartments(ctx context.Context, token string) ([]*b
 	var deptList []*biz.DingtalkDept
 
 	// 1. 获取子部门ID列表（所有）
+	deptIdlist, err := r.getDeptIds(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	r.log.Info("FetchAccounts.deptIdlist: %v", deptIdlist)
 	// 2. 获取子部门详情
+	deptList, err = r.fetchDeptDetails(ctx, token, deptIdlist, 10)
+	if err != nil {
+		return nil, err
+	}
+	return deptList, nil
+}
+
+func (r *dingTalkRepo) getDeptIds(ctx context.Context, token string) ([]int64, error) {
 	uri := fmt.Sprintf("%s/topapi/v2/department/listsubid?access_token=%s", "https://oapi.dingtalk.com", token)
-	// https://oapi.dingtalk.com/topapi/v2/department/listsubid
 	input := &biz.ListDeptIDRequest{
 		DeptID: 1,
 	}
@@ -62,15 +74,8 @@ func (r *dingTalkRepo) FetchDepartments(ctx context.Context, token string) ([]*b
 		return nil, fmt.Errorf("钉钉API返回错误: %s, errcode: %d", deptIDResponse.Errmsg, deptIDResponse.Errcode)
 	}
 	deptIdlist := deptIDResponse.Result.DeptIDList
-	r.log.Info("FetchAccounts.deptIdlist: %v", deptIdlist)
-
-	deptList, err = r.fetchDeptDetails(ctx, token, deptIdlist, 10)
-	if err != nil {
-		return nil, err
-	}
-	return deptList, nil
+	return deptIdlist, nil
 }
-
 func (r *dingTalkRepo) fetchDeptDetails(ctx context.Context, token string, deptIds []int64, maxConcurrent int) ([]*biz.DingtalkDept, error) {
 	uriDetail := fmt.Sprintf("%s/topapi/v2/department/get?access_token=%s", "https://oapi.dingtalk.com", token)
 	sem := make(chan struct{}, maxConcurrent)
@@ -131,7 +136,7 @@ func (r *dingTalkRepo) fetchDeptDetails(ctx context.Context, token string, deptI
 	close(results)
 	close(errChan)
 	var deptList []*biz.DingtalkDept
-	for dept := range results { // 自动检测channel关闭
+	for dept := range results {
 		deptList = append(deptList, dept)
 	}
 
@@ -139,12 +144,68 @@ func (r *dingTalkRepo) fetchDeptDetails(ctx context.Context, token string, deptI
 
 }
 
-func (r *dingTalkRepo) FetchDepartmentUsers(ctx context.Context, token string, deptId, cursor int64) ([]*biz.DingtalkDeptUser, int64, error) {
+func (r *dingTalkRepo) FetchDepartmentUsers(ctx context.Context, token string, deptIds []int64) ([]*biz.DingtalkDeptUser, error) {
 	// 服务端API.通讯录管理.用户管理.获取部门用户详情
+	maxConcurrent := 10
+	sem := make(chan struct{}, maxConcurrent)
+	results := make(chan *biz.DingtalkDeptUser, len(deptIds))
+	errChan := make(chan error, 1)
 
-	uri := fmt.Sprintf("%s/topapi/v2/user/list?access_token=%s", "https://oapi.dingtalk.com", token)
+	var wg sync.WaitGroup
 
+	for _, deptId := range deptIds {
+		wg.Add(1)
+
+		select {
+		case sem <- struct{}{}:
+		case <-ctx.Done():
+			wg.Done()
+			continue
+		}
+
+		// 启动goroutine处理任务
+		go func(id int64) {
+			defer func() {
+				<-sem     // 释放信号量
+				wg.Done() // 通知任务完成
+			}()
+
+			for {
+				userList, cursor, err := r.getUserListByDepId(ctx, token, id)
+				if err != nil {
+					r.log.Info("FetchDepartmentUsers.getUserListByDepId: %v, err: %v", id, err)
+					errChan <- err
+					return
+				}
+				for _, user := range userList {
+					results <- user
+				}
+				if cursor == 0 {
+					break
+				}
+
+			}
+		}(deptId)
+	}
+	wg.Wait()
+
+	close(results)
+	close(errChan)
+	var userList []*biz.DingtalkDeptUser
+	for user := range results {
+
+		userList = append(userList, user)
+
+	}
+	for _, user := range userList {
+		r.log.Info("FetchDepartmentUsers.userList.user: %v", user)
+	}
+	return userList, nil
+}
+func (r *dingTalkRepo) getUserListByDepId(ctx context.Context, token string, deptId int64) ([]*biz.DingtalkDeptUser, int64, error) {
 	// 发送post请求
+	var cursor int64 = 0
+	uri := fmt.Sprintf("%s/topapi/v2/user/list?access_token=%s", "https://oapi.dingtalk.com", token)
 	input := &biz.ListDeptUserRequest{
 		DeptID: deptId,
 		Cursor: cursor,

@@ -2,8 +2,6 @@ package biz
 
 import (
 	"context"
-	"database/sql"
-	"time"
 )
 
 // type DingtalkUser struct {
@@ -85,8 +83,8 @@ type DingtalkDeptResponse struct {
 // }
 
 type DingtalkDeptUser struct {
-	Userid     string  `json:"userid"`
-	Unionid    string  `json:"unionid"`
+	Userid     string  `json:"userid"`  //zhangsan 用户的userId
+	Unionid    string  `json:"unionid"` //用户姓名
 	Name       string  `json:"name"`
 	Avatar     string  `json:"avatar"`
 	Mobile     string  `json:"mobile"`
@@ -109,7 +107,7 @@ type DingtalkDeptUser struct {
 	//WorkPlace string `json:"work_place"`
 
 	//JobNumber string `json:"job_number"`
-	//DeptOrder                string `json:"dept_order"`
+	DeptOrder int `json:"dept_order"`
 	//LoginID                  string `json:"login_id"`
 	//ExclusiveAccountCorpName string `json:"exclusive_account_corp_name"`
 	//Telephone                string `json:"telephone"`
@@ -121,15 +119,11 @@ type DingtalkDeptUser struct {
 }
 
 type DingtalkDeptUserRelation struct {
-	TaskID         string        `json:"task_id"`
-	ThirdCompanyID string        `json:"third_company_id"`
-	PlatformID     string        `json:"platform_id"`
-	Uid            string        `json:"uid"`
-	Did            string        `json:"did"`
-	Order          sql.NullInt32 `json:"order"`
-	Main           int           `json:"main"`
-	Ctime          time.Time     `json:"ctime"`
-	CheckType      int8          `json:"check_type"`
+	Uid            string `json:"uid"`
+	Did            string `json:"did"`
+	ThirdCompanyID string `json:"third_company_id"`
+	PlatformID     string `json:"platform_id"`
+	Order          int    `json:"order"`
 }
 
 type ListDeptUserRequest struct {
@@ -154,5 +148,5 @@ type ListDeptUserResponse struct {
 type DingTalkRepo interface {
 	GetAccessToken(ctx context.Context, code string) (string, error)
 	FetchDepartments(ctx context.Context, token string) ([]*DingtalkDept, error)
-	FetchDepartmentUsers(ctx context.Context, token string, deptId int64, cursor int64) ([]*DingtalkDeptUser, int64, error)
+	FetchDepartmentUsers(ctx context.Context, token string, deptId []int64) ([]*DingtalkDeptUser, error)
 }
