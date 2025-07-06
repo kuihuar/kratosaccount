@@ -20,6 +20,7 @@ type AccountRepo interface {
 	SaveUsers(context.Context, []*DingtalkDeptUser) (int, error)
 	SaveDepartments(context.Context, []*DingtalkDept) (int, error)
 	SaveDepartmentUserRelations(context.Context, []*DingtalkDeptUserRelation) (int, error)
+	SaveCompanyCfg(context.Context) error
 }
 
 // AccountUsecase is a Account usecase.
@@ -53,6 +54,13 @@ func (uc *AccountUsecase) CreateSyncAccount(ctx context.Context, req *v1.CreateS
 	// taskId := strconv.FormatUint(atomic.AddUint64(&taskId, 1), 10)
 	// defer isSyncing.Store(false) // 确保锁释放
 
+	// 0. 保存公司配置
+	err := uc.repo.SaveCompanyCfg(ctx)
+	uc.log.WithContext(ctx).Infof("biz.CreateSyncAccount: err: %v", err)
+	if err != nil {
+		return nil, err
+	}
+return nil, err
 	uc.log.WithContext(ctx).Infof("CreateSyncAccount: %v", req)
 
 	// 1. 获取access_token
@@ -62,25 +70,21 @@ func (uc *AccountUsecase) CreateSyncAccount(ctx context.Context, req *v1.CreateS
 		return nil, err
 	}
 
-	deptIds := []int64{1002233779, 1002216804}
-	if len(deptIds) < 0 {
-
-		// 1. 从第三方获取部门和用户数据
-		depts, err := uc.thirdPartyRepo.FetchDepartments(ctx, accessToken)
-		uc.log.WithContext(ctx).Infof("biz.CreateSyncAccount: depts: %v, err: %v", depts, err)
-		if err != nil {
-			return nil, err
-		}
-		// 2. 数据入库
-		deptCount, err := uc.repo.SaveDepartments(ctx, depts)
-		uc.log.WithContext(ctx).Infof("biz.CreateSyncAccount: deptCount: %v, err: %v", deptCount, err)
-		if err != nil {
-			return nil, err
-		}
-		var deptIds []int64
-		for _, dept := range depts {
-			deptIds = append(deptIds, dept.DeptID)
-		}
+	// 1. 从第三方获取部门和用户数据
+	depts, err := uc.thirdPartyRepo.FetchDepartments(ctx, accessToken)
+	uc.log.WithContext(ctx).Infof("biz.CreateSyncAccount: depts: %v, err: %v", depts, err)
+	if err != nil {
+		return nil, err
+	}
+	// 2. 数据入库
+	deptCount, err := uc.repo.SaveDepartments(ctx, depts)
+	uc.log.WithContext(ctx).Infof("biz.CreateSyncAccount: deptCount: %v, err: %v", deptCount, err)
+	if err != nil {
+		return nil, err
+	}
+	var deptIds []int64
+	for _, dept := range depts {
+		deptIds = append(deptIds, dept.DeptID)
 	}
 
 	// 1. 从第三方获取用户数据
@@ -95,7 +99,7 @@ func (uc *AccountUsecase) CreateSyncAccount(ctx context.Context, req *v1.CreateS
 		return nil, err
 	}
 
-	//------
+	// 2. 关系数据入库
 	var deptUserRelations []*DingtalkDeptUserRelation
 	for _, deptUser := range deptUsers {
 		for _, depId := range deptUser.DeptIDList {

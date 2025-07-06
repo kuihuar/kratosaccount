@@ -102,6 +102,20 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	}, cleanup, nil
 }
 
+func descryt(key, sk string) string {
+	return key
+}
+func initDbEnv() (*gorm.DB, error) {
+	key, err := conf.GetEnv("ECIS_ECISACCOUNTSYNC_DB")
+	if err != nil {
+		panic(err)
+	}
+	sk := "app_sk"
+	dsn := descryt(key, sk)
+
+	return gorm.Open(mysql.Open(dsn), &gorm.Config{})
+
+}
 func initDB(c *conf.Data) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 
